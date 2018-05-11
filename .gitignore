@@ -1,0 +1,8 @@
+*.pyc
+*.swo
+*.swp
+*~
+__pycache__
+tmp/
+var/
+url_metadata_env/
