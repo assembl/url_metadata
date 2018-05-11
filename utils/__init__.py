@@ -144,4 +144,4 @@ def decode(data_str):
     for special_character, code in special_characters:
         result = result.replace(code, special_character)
 
-    return json.loads(data_dict)
+    return json.loads(data_str)
