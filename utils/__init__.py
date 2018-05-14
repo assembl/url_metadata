@@ -9,8 +9,9 @@ import micawber
 import metadata_parser
 import urllib
 import requests
-from urllib.parse import urlparse
 from bs4 import BeautifulSoup
+
+from .apis_endpoints import extract_metadata
 
 
 special_characters = [('\'', '#')]
@@ -23,7 +24,21 @@ headers = {
 }
 
 
-providers = micawber.bootstrap_basic()
+oembed_providers_reg = micawber.ProviderRegistry()
+
+
+with open('./providers.json') as providers_file:
+    providers = json.load(providers_file)
+    for provider in providers:
+        endpoints = provider['endpoints']
+        for endpoint in endpoints:
+            url = endpoint['url']
+            schemes = endpoint['schemes']
+            for scheme in schemes:
+                oembed_providers_reg.register(scheme, micawber.Provider(url))
+
+
+oembed_providers = micawber.bootstrap_basic(registry=oembed_providers_reg)
 
 
 #inspired: https://github.com/phillipsm/pyfav/blob/master/pyfav/pyfav.py
@@ -44,19 +59,20 @@ def get_favicon_url(markup, url):
     The URL of the favicon. A string. If not found, returns None.
     """
     
-    parsed_site_uri = urlparse(url)
+    parsed_site_uri = urllib.parse.urlparse(url)
     
     soup = BeautifulSoup(markup, "lxml")
         
     # Do we have a link element with the icon?
     icon_link = soup.find('link', rel='icon')
+    favicon_url = None
     if icon_link and icon_link.has_attr('href'):
         
         favicon_url = icon_link['href']
         
         # Sometimes we get a protocol-relative path
         if favicon_url.startswith('//'):
-            parsed_uri = urlparse(url)
+            parsed_uri = urllib.parse.urlparse(url)
             favicon_url = parsed_uri.scheme + ':' + favicon_url
 
         # An absolute path relative to the domain
@@ -90,7 +106,7 @@ def get_favicon_url(markup, url):
 
 
 def get_url_domain(url, name_only=False):
-    parsed_uri = urlparse(url)
+    parsed_uri = urllib.parse.urlparse(url)
     if not name_only:
         return '{uri.scheme}://{uri.netloc}/'.format(uri=parsed_uri)
 
@@ -120,13 +136,20 @@ def pars_url_metadata(url):
     }
     if not result.get('provider_name'):
         result['provider_name'] = get_url_domain(url, True)
-
+    
+    result.update(extract_metadata(url, page=page))
     return result
 
 
 def get_url_metadata(url):
     try:
-        return providers.request(url)
+        provider_metadata = oembed_providers.request(url)
+        if not provider_metadata.get('html', None):
+            url_metadata = pars_url_metadata(url)
+            url_metadata.update(provider_metadata)
+            return url_metadata
+        
+        return provider_metadata
     except Exception:
         return pars_url_metadata(url)
 
