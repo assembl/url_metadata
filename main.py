@@ -23,9 +23,9 @@ cors = CORS(app, resources={r"/": {"origins": "*"}})
 
 def table_check():
     create_table_query = """
-        CREATE TABLE URL_METADTA(
+        CREATE TABLE URL_METADATA(
         ID INTEGER PRIMARY KEY     AUTOINCREMENT,
-        METADTA TEXT NOT NULL UNIQUE,
+        METADATA TEXT NOT NULL UNIQUE,
         URL  TEXT  NOT NULL UNIQUE
         );
         """
@@ -51,7 +51,7 @@ def home():
                 # retrieve the metadata directly from the database if the URL already exists
                 # else insert a new line in the database
                 exist_url_query = """
-                    SELECT METADTA FROM URL_METADTA
+                    SELECT METADATA FROM URL_METADATA
                         WHERE URL='{url}'
                     """.format(url=url)
                 result_cursor = cursor.execute(exist_url_query)
@@ -60,8 +60,11 @@ def home():
                     url_metadata = decode(result_fetch[0])
                 else:
                     url_metadata = get_url_metadata(url)
+                    result_cursor = cursor.execute('SELECT max(ID) FROM URL_METADATA')
+                    last_id = cursor.fetchone()[0] or 0
+                    url_metadata['id'] = last_id
                     insert_row = """
-                        INSERT INTO URL_METADTA (URL, METADTA)
+                        INSERT INTO URL_METADATA (URL, METADATA)
                             VALUES ('{url}', '{metadata}')
                         """.format(url=url, metadata=encode(url_metadata))
                     cursor.execute(insert_row)

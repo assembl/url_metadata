@@ -125,33 +125,36 @@ def pars_url_metadata(url):
     except Exception:
         return None
     
+    image = url_metadata.get_metadata('image', None)
+    if not image:
+        image = url_metadata.get_metadata('image:src', None)
+
+    site_name = url_metadata.get_metadata('site_name', None)
+    if not site_name:
+        site_name = url_metadata.get_metadata('og:site_name', None)
+        site_name = site_name if site_name else get_url_domain(url, True)
+
     result = {
         'url': url,
         'favicon_url': get_favicon_url(page, url),
         'title': url_metadata.get_metadata('title', None),
         'description': url_metadata.get_metadata('description', None),
-        'provider_name': url_metadata.get_metadata('site_name', None),
-        'thumbnail_url': url_metadata.get_metadata('image', None),
+        'provider_name': site_name,
+        'thumbnail_url': image,
         'html': None
     }
-    if not result.get('provider_name'):
-        result['provider_name'] = get_url_domain(url, True)
-    
     result.update(extract_metadata(url, page=page))
     return result
 
 
 def get_url_metadata(url):
+    url_metadata = pars_url_metadata(url)
     try:
         provider_metadata = oembed_providers.request(url)
-        if not provider_metadata.get('html', None):
-            url_metadata = pars_url_metadata(url)
-            url_metadata.update(provider_metadata)
-            return url_metadata
-        
+        url_metadata.update(provider_metadata)
         return provider_metadata
     except Exception:
-        return pars_url_metadata(url)
+        return url_metadata
 
 
 def encode(data_dict):
