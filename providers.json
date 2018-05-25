@@ -51,13 +51,13 @@
     },
     {
         "provider_name": "amCharts Live Editor",
-        "provider_url": "http://live.amcharts.com/",
+        "provider_url": "https://live.amcharts.com/",
         "endpoints": [
             {
                 "schemes": [
-                    "http://live.amcharts.com/\\S*"
+                    "https://live.amcharts.com/\\S*"
                 ],
-                "url": "http://live.amcharts.com/oembed"
+                "url": "https://live.amcharts.com/oembed"
             }
         ]
     },
