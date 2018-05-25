@@ -7,6 +7,7 @@
 import re
 import json
 import urllib
+from bs4 import BeautifulSoup
 
 
 def extract_wikipedia_metadata(endpoint, url, **kwargs):
@@ -30,18 +31,44 @@ def extract_wikipedia_metadata(endpoint, url, **kwargs):
     return result
 
 
+def extract_twitter_metadata(endpoint, url, **kwargs):
+    # we need to use the twitter API
+    page = kwargs.get('page', None)
+    result = {}
+    soup = BeautifulSoup(page, "lxml")
+    twit = soup.find('div', 'permalink-header')
+    if twit:
+        img = twit.find('img', 'avatar')
+        if img:
+            result = {'author_avatar': img['src']}
+
+        username = twit.find('span', 'username')
+        if username:
+            name = username.find('b')
+            if name:
+                result['author_name'] = '@'+name.text
+
+    return result
+
+
 ENDPOINTS = [
     {
-        'scheme': "https://\\S*.wikipedia.org/wiki/\\S*",
+        'schemes': ["https://\\S*.wikipedia.org/wiki/\\S*"],
         'url': "https://{local}.wikipedia.org/w/api.php?action=query&prop=extracts&format=json&explaintext=&exintro=&titles={title}",
         'extractor': extract_wikipedia_metadata
+    },
+    {
+        'schemes': [
+            "https://twitter.com/\\S*/status/\\S*",
+            "https://\\S*.twitter.com/\\S*/status/\\S*"],
+        'extractor': extract_twitter_metadata
     }
 ]
 
 
 def extract_metadata(url, **kwargs):
     for endpoint in ENDPOINTS:
-        if re.match(endpoint['scheme'], url):
+        if any([re.match(scheme, url) for scheme in endpoint['schemes']]):
             return endpoint['extractor'](endpoint, url, **kwargs)
 
     return {}

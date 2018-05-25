@@ -14,13 +14,11 @@ from bs4 import BeautifulSoup
 from .apis_endpoints import extract_metadata
 
 
-special_characters = [('\'', '#')]
+special_characters = [('\'', '[#]')]
 
 # Some hosts don't like the requests default UA. Use this one instead.
 headers = {
-    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_2) \
-        AppleWebKit/537.36 (KHTML, like Gecko) Chrome/33.0.1750.152 \
-        Safari/537.36'
+    'User-Agent': 'Mozilla/5.0'
 }
 
 
@@ -140,21 +138,30 @@ def pars_url_metadata(url):
         'title': url_metadata.get_metadata('title', None),
         'description': url_metadata.get_metadata('description', None),
         'provider_name': site_name,
-        'thumbnail_url': image,
-        'html': None
+        'thumbnail_url': image
     }
     result.update(extract_metadata(url, page=page))
     return result
 
 
 def get_url_metadata(url):
+    result = None
     url_metadata = pars_url_metadata(url)
     try:
         provider_metadata = oembed_providers.request(url)
-        url_metadata.update(provider_metadata)
-        return provider_metadata
+        provider_metadata.update(url_metadata)
+        result = provider_metadata
     except Exception:
-        return url_metadata
+        result = url_metadata
+    
+    author_name = result.get('author_name', None)
+    author_url = result.get('author_url', None)
+    author_avatar = result.get('author_avatar', None)
+    if not author_avatar and author_name and author_url:
+        author_metadata = get_url_metadata(author_url)
+        result['author_avatar'] = author_metadata.get('thumbnail_url', None)
+
+    return result
 
 
 def encode(data_dict):
@@ -170,4 +177,4 @@ def decode(data_str):
     for special_character, code in special_characters:
         result = result.replace(code, special_character)
 
-    return json.loads(data_str)
+    return json.loads(result)

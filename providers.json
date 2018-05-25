@@ -1,5 +1,18 @@
 [
     {
+
+        "provider_name": "Facebook",
+        "provider_url": "https://www.facebook.com",
+        "endpoints": [
+            {
+                "schemes": [
+                    "https://www.facebook.com/\\S*/posts/\\S*"
+                ],
+                "url": "https://www.facebook.com/plugins/post/oembed.json"
+            }
+        ]
+    },
+    {
         "provider_name": "23HQ",
         "provider_url": "http://www.23hq.com",
         "endpoints": [
