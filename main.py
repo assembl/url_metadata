@@ -20,6 +20,7 @@ app = Flask(__name__)
 
 cors = CORS(app, resources={r"/": {"origins": "*"}})
 
+DB_FILENAME = 'var/urls.db'
 
 def table_check():
     create_table_query = """
@@ -29,7 +30,7 @@ def table_check():
         URL  TEXT  NOT NULL UNIQUE
         );
         """
-    with sqlite3.connect('var/urls.db') as conn:
+    with sqlite3.connect(DB_FILENAME) as conn:
         cursor = conn.cursor()
         try:
             cursor.execute(create_table_query)
@@ -41,7 +42,7 @@ def table_check():
 @cross_origin(origin='localhost',headers=['Content-Type','Authorization'])
 def home():
     is_get = request.method == 'GET'
-    with sqlite3.connect('var/urls.db') as conn:
+    with sqlite3.connect(DB_FILENAME) as conn:
         try:
             cursor = conn.cursor()
             # get the requested URL
