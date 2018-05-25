@@ -5,12 +5,9 @@
 # author: Amen Souissi
 
 import sqlite3
-import string
-from flask import Flask, request, render_template, redirect, jsonify
+from flask import Flask, request, render_template, jsonify
 from flask_cors import CORS, cross_origin
 from sqlite3 import OperationalError
-from urllib.parse import urlparse
-import micawber
 
 from utils import get_url_metadata, encode, decode
 
@@ -69,7 +66,7 @@ def home():
                             VALUES ('{url}', '{metadata}')
                         """.format(url=url, metadata=encode(url_metadata))
                     cursor.execute(insert_row)
-                
+
                 # return the result to the user
                 if is_get:
                     return jsonify(**{'code': 'SUCCESS',

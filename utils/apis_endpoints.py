@@ -27,7 +27,7 @@ def extract_wikipedia_metadata(endpoint, url, **kwargs):
 
     except Exception:
         pass
-    
+
     return result
 
 

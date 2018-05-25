@@ -7,6 +7,7 @@
 import json
 import micawber
 import metadata_parser
+import os.path
 import urllib
 import requests
 from bs4 import BeautifulSoup
@@ -44,30 +45,30 @@ def get_favicon_url(markup, url):
     """
     Given markup, parse it for a favicon URL. The favicon URL is adjusted
     so that it can be retrieved independently. We look in the markup returned
-    from the URL first and if we don't find a favicon there, we look for the 
+    from the URL first and if we don't find a favicon there, we look for the
     default location, e.g., http://example.com/favicon.ico . We retrurn None if
     unable to find the file.
-    
+
     Keyword arguments:
     markup -- A string containing the HTML markup.
     url -- A string containing the URL where the supplied markup can be found.
     We use this URL in cases where the favicon path in the markup is relative.
-    
+
     Retruns:
     The URL of the favicon. A string. If not found, returns None.
     """
-    
+
     parsed_site_uri = urllib.parse.urlparse(url)
-    
+
     soup = BeautifulSoup(markup, "lxml")
-        
+
     # Do we have a link element with the icon?
     icon_link = soup.find('link', rel='icon')
     favicon_url = None
     if icon_link and icon_link.has_attr('href'):
-        
+
         favicon_url = icon_link['href']
-        
+
         # Sometimes we get a protocol-relative path
         if favicon_url.startswith('//'):
             parsed_uri = urllib.parse.urlparse(url)
@@ -77,24 +78,24 @@ def get_favicon_url(markup, url):
         elif favicon_url.startswith('/'):
             favicon_url = parsed_site_uri.scheme + '://' + \
                 parsed_site_uri.netloc + favicon_url
-        
-        # A relative path favicon    
+
+        # A relative path favicon
         elif not favicon_url.startswith('http'):
             path, filename  = os.path.split(parsed_site_uri.path)
             favicon_url = parsed_site_uri.scheme + '://' + \
                 parsed_site_uri.netloc + '/' + os.path.join(path, favicon_url)
-        
+
         # We found a favicon in the markup and we've formatted the URL
         # so that it can be loaded independently of the rest of the page
 
     if favicon_url:
         return favicon_url
-        
+
     # The favicon doesn't appear to be in the makrup
     # Let's look at the common locaiton, url/favicon.ico
     favicon_url = '{uri.scheme}://{uri.netloc}/favicon.ico'.format(\
         uri=parsed_site_uri)
-                        
+
     response = requests.get(favicon_url, headers=headers)
     if response.status_code == requests.codes.ok:
         return favicon_url
@@ -122,7 +123,7 @@ def pars_url_metadata(url):
             html=page.decode('utf-8'), requests_timeout=100)
     except Exception:
         return None
-    
+
     image = url_metadata.get_metadata('image', None)
     if not image:
         image = url_metadata.get_metadata('image:src', None)
@@ -153,7 +154,7 @@ def get_url_metadata(url):
         result = provider_metadata
     except Exception:
         result = url_metadata
-    
+
     author_name = result.get('author_name', None)
     author_url = result.get('author_url', None)
     author_avatar = result.get('author_avatar', None)
