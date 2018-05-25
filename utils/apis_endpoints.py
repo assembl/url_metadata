@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2018 by Ecreall under licence GPL3 terms
+# Copyright (c) 2018 by Ecreall under licence AGPL terms
 # available on http://www.gnu.org/licenses/agpl.html
 # licence: AGPL
 # author: Amen Souissi
