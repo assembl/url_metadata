@@ -1421,7 +1421,8 @@
                 "schemes": [
                     "http://sketchfab.com/models/\\S*",
                     "https://sketchfab.com/models/\\S*",
-                    "https://sketchfab.com/\\S*/folders/\\S*"
+                    "https://sketchfab.com/\\S*/folders/\\S*",
+                    "https://skfb.ly/\\S*"
                 ],
                 "url": "http://sketchfab.com/oembed"
             }
