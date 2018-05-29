@@ -10,12 +10,14 @@ import metadata_parser
 import os.path
 import urllib
 import requests
+from flask import url_for
 from bs4 import BeautifulSoup
 
 from .apis_endpoints import extract_metadata
 
 
-special_characters = [('\'', '[#]')]
+# all the pictures present in the URL metadata
+pictures = ['thumbnail_url', 'author_avatar', 'favicon_url']
 
 # Some hosts don't like the requests default UA. Use this one instead.
 headers = {
@@ -29,12 +31,10 @@ oembed_providers_reg = micawber.ProviderRegistry()
 with open('./providers.json') as providers_file:
     providers = json.load(providers_file)
     for provider in providers:
-        endpoints = provider['endpoints']
-        for endpoint in endpoints:
-            url = endpoint['url']
-            schemes = endpoint['schemes']
-            for scheme in schemes:
-                oembed_providers_reg.register(scheme, micawber.Provider(url))
+        for endpoint in provider['endpoints']:
+            for scheme in endpoint['schemes']:
+                oembed_providers_reg.register(
+                    scheme, micawber.Provider(endpoint['url']))
 
 
 oembed_providers = micawber.bootstrap_basic(registry=oembed_providers_reg)
@@ -105,6 +105,10 @@ def get_favicon_url(markup, url):
 
 
 def get_url_domain(url, name_only=False):
+    """
+    Return the domaine of an URL. If name_only is True,
+    we return only the netloc of the URL
+    """
     parsed_uri = urllib.parse.urlparse(url)
     if not name_only:
         return '{uri.scheme}://{uri.netloc}/'.format(uri=parsed_uri)
@@ -113,8 +117,12 @@ def get_url_domain(url, name_only=False):
 
 
 def pars_url_metadata(url):
+    """
+    This function pars the HTML page and retrieves the URL metadata using MetadataParser API.
+    """
     page = ''
     try:
+        # Reading the HTML page and retrieving metadata
         resp = urllib.request.urlopen(
             urllib.request.Request(url, headers=headers))
         url = resp.url
@@ -124,9 +132,10 @@ def pars_url_metadata(url):
     except Exception:
         return None
 
-    image = url_metadata.get_metadata('image', None)
-    if not image:
-        image = url_metadata.get_metadata('image:src', None)
+    # Formatting and verification of metadata
+    thumbnail_url = url_metadata.get_metadata('image', None)
+    if not thumbnail_url:
+        thumbnail_url = url_metadata.get_metadata('image:src', None)
 
     site_name = url_metadata.get_metadata('site_name', None)
     if not site_name:
@@ -139,43 +148,44 @@ def pars_url_metadata(url):
         'title': url_metadata.get_metadata('title', None),
         'description': url_metadata.get_metadata('description', None),
         'provider_name': site_name,
-        'thumbnail_url': image
+        'thumbnail_url': thumbnail_url
     }
     result.update(extract_metadata(url, page=page))
     return result
 
 
-def get_url_metadata(url):
-    result = None
+def get_url_metadata(url, picture_uploader=None):
+    """
+    Retrieving URL metadata by applying the MetadataParser API and the oembed API.
+    picture_uploader is used to save the images in the database
+    """
     url_metadata = pars_url_metadata(url)
     try:
         provider_metadata = oembed_providers.request(url)
         provider_metadata.update(url_metadata)
-        result = provider_metadata
+        url_metadata = provider_metadata
     except Exception:
-        result = url_metadata
+        pass
 
-    author_name = result.get('author_name', None)
-    author_url = result.get('author_url', None)
-    author_avatar = result.get('author_avatar', None)
+    # Recovery of the author's picture
+    author_name = url_metadata.get('author_name', None)
+    author_url = url_metadata.get('author_url', None)
+    author_avatar = url_metadata.get('author_avatar', None)
     if not author_avatar and author_name and author_url:
         author_metadata = get_url_metadata(author_url)
-        result['author_avatar'] = author_metadata.get('thumbnail_url', None)
+        url_metadata['author_avatar'] = author_metadata.get(
+            'thumbnail_url', None)
 
-    return result
+    # Save the pictures in the database (see picture_uploader)
+    if picture_uploader:
+        for picture in pictures:
+            picture_url = url_metadata.get(picture, None)
+            if picture_url:
+                picture_id = picture_uploader(picture_url)
+                url_metadata[picture] = url_for(
+                    'picture',
+                    picture_id=picture_id,
+                    _external=True) if picture_id else None
 
 
-def encode(data_dict):
-    result = json.dumps(data_dict)
-    for special_character, code in special_characters:
-        result = result.replace(special_character, code)
-
-    return result
-
-
-def decode(data_str):
-    result = data_str
-    for special_character, code in special_characters:
-        result = result.replace(code, special_character)
-
-    return json.loads(result)
+    return url_metadata

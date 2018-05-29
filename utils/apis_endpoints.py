@@ -32,7 +32,8 @@ def extract_wikipedia_metadata(endpoint, url, **kwargs):
 
 
 def extract_twitter_metadata(endpoint, url, **kwargs):
-    # we need to use the twitter API
+    # @TODO We need to use the twitter API. For this we need an API key.
+    # Actualy we parse the twitter post (it's not clean :().
     page = kwargs.get('page', None)
     result = {}
     soup = BeautifulSoup(page, "lxml")

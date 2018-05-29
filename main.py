@@ -4,12 +4,18 @@
 # licence: AGPL
 # author: Amen Souissi
 
+import io
 import sqlite3
-from flask import Flask, request, render_template, jsonify
+import hashlib
+import urllib
+import json
+from flask import (
+    Flask, request, render_template,
+    jsonify, send_file, abort)
 from flask_cors import CORS, cross_origin
 from sqlite3 import OperationalError
 
-from utils import get_url_metadata, encode, decode
+from utils import get_url_metadata, headers
 
 
 #Assuming urls.db is in your app root folder
@@ -19,6 +25,7 @@ cors = CORS(app, resources={r"/": {"origins": "*"}})
 
 DB_FILENAME = 'var/urls.db'
 
+
 def table_check():
     create_table_query = """
         CREATE TABLE URL_METADATA(
@@ -27,12 +34,51 @@ def table_check():
         URL  TEXT  NOT NULL UNIQUE
         );
         """
+    create_pictures_table_query = """
+        CREATE TABLE PICTURES(
+        ID TEXT PRIMARY KEY,
+        PICTURE BLOB
+        );
+        """
     with sqlite3.connect(DB_FILENAME) as conn:
         cursor = conn.cursor()
         try:
             cursor.execute(create_table_query)
         except OperationalError:
             pass
+
+        try:
+            cursor.execute(create_pictures_table_query)
+        except OperationalError:
+            pass
+
+
+def get_picture_uploader(cursor):
+    def insert_picture(url):
+        try:
+            # read the picture from the URL
+            blob = urllib.request.urlopen(
+                urllib.request.Request(url, headers=headers)).read()
+            # generate an id for this URL
+            img_id = hashlib.md5(url.encode('utf-8')).hexdigest()
+            exist_img_query = """
+                SELECT PICTURE FROM PICTURES
+                    WHERE ID='{img_id}'
+                """.format(img_id=img_id)
+            result_cursor = cursor.execute(exist_img_query)
+            result_fetch = result_cursor.fetchone()
+            # if the picture exist return the img_id else add it to the database
+            if not result_fetch:
+                add_img_query = """INSERT INTO PICTURES
+                (ID, PICTURE)
+                VALUES(?, ?);"""
+                cursor.execute(add_img_query, [img_id, sqlite3.Binary(blob)])
+
+            return img_id
+        except Exception:
+            return None
+
+    return insert_picture
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -55,17 +101,17 @@ def home():
                 result_cursor = cursor.execute(exist_url_query)
                 result_fetch = result_cursor.fetchone()
                 if result_fetch:
-                    url_metadata = decode(result_fetch[0])
+                    url_metadata = json.loads(result_fetch[0])
                 else:
-                    url_metadata = get_url_metadata(url)
+                    url_metadata = get_url_metadata(url, get_picture_uploader(cursor))
                     result_cursor = cursor.execute('SELECT max(ID) FROM URL_METADATA')
                     last_id = cursor.fetchone()[0] or 0
                     url_metadata['id'] = last_id
                     insert_row = """
                         INSERT INTO URL_METADATA (URL, METADATA)
-                            VALUES ('{url}', '{metadata}')
-                        """.format(url=url, metadata=encode(url_metadata))
-                    cursor.execute(insert_row)
+                            VALUES (?, ?)
+                        """
+                    cursor.execute(insert_row, [url, json.dumps(url_metadata)])
 
                 # return the result to the user
                 if is_get:
@@ -86,6 +132,26 @@ def home():
                 return render_template(
                     'home.html',
                     error=True)
+
+
+# A view to serve the images
+@app.route('/picture/<picture_id>')
+def picture(picture_id):
+    with sqlite3.connect(DB_FILENAME) as conn:
+        try:
+            cursor = conn.cursor()
+            exist_img_query = """
+                SELECT PICTURE FROM PICTURES
+                    WHERE ID='{img_id}'
+                """.format(img_id=picture_id)
+            result_cursor = cursor.execute(exist_img_query)
+            result_fetch = result_cursor.fetchone()
+            if result_fetch:
+                return send_file(io.BytesIO(result_fetch[0]), mimetype='image')
+
+            return abort(404)
+        except Exception as error:
+            return abort(404)
 
 
 if __name__ == '__main__':
