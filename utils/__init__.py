@@ -121,11 +121,13 @@ def pars_url_metadata(url):
     This function pars the HTML page and retrieves the URL metadata using MetadataParser API.
     """
     page = ''
+    origina_url = url
     try:
         # Reading the HTML page and retrieving metadata
         resp = urllib.request.urlopen(
-            urllib.request.Request(url, headers=headers))
-        url = resp.url
+            urllib.request.Request(origina_url, headers=headers))
+        # Retrieve the original URL. The URL can be shortened by an URL shortner like bitly
+        origina_url = resp.url
         page = resp.read()
         url_metadata = metadata_parser.MetadataParser(
             html=page.decode('utf-8'), requests_timeout=100)
@@ -140,17 +142,17 @@ def pars_url_metadata(url):
     site_name = url_metadata.get_metadata('site_name', None)
     if not site_name:
         site_name = url_metadata.get_metadata('og:site_name', None)
-        site_name = site_name if site_name else get_url_domain(url, True)
+        site_name = site_name if site_name else get_url_domain(origina_url, True)
 
     result = {
-        'url': url,
-        'favicon_url': get_favicon_url(page, url),
+        'url': origina_url,
+        'favicon_url': get_favicon_url(page, origina_url),
         'title': url_metadata.get_metadata('title', None),
         'description': url_metadata.get_metadata('description', None),
         'provider_name': site_name,
         'thumbnail_url': thumbnail_url
     }
-    result.update(extract_metadata(url, page=page))
+    result.update(extract_metadata(origina_url, page=page))
     return result
 
 
@@ -161,7 +163,9 @@ def get_url_metadata(url, picture_uploader=None):
     """
     url_metadata = pars_url_metadata(url)
     try:
-        provider_metadata = oembed_providers.request(url)
+        # retrieve the original URL. The URL can be shortened by an URL shortner like bitly
+        origina_url = url_metadata['url'] or url
+        provider_metadata = oembed_providers.request(origina_url)
         provider_metadata.update(url_metadata)
         url_metadata = provider_metadata
     except Exception:
