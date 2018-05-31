@@ -14,3 +14,6 @@ With a virtual env:
     source url_metadata_env/bin/activate
     pip install -r requirements.txt
     python main.py
+
+Run tests
+    python -m unittest tests

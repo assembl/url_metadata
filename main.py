@@ -103,7 +103,8 @@ def home():
                 if result_fetch:
                     url_metadata = json.loads(result_fetch[0])
                 else:
-                    url_metadata = get_url_metadata(url, get_picture_uploader(cursor))
+                    url_metadata = get_url_metadata(
+                        url, picture_uploader=get_picture_uploader(cursor))
                     result_cursor = cursor.execute('SELECT max(ID) FROM URL_METADATA')
                     last_id = cursor.fetchone()[0] or 0
                     url_metadata['id'] = last_id

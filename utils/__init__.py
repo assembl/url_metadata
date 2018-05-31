@@ -91,14 +91,17 @@ def get_favicon_url(markup, url):
     if favicon_url:
         return favicon_url
 
-    # The favicon doesn't appear to be in the makrup
-    # Let's look at the common locaiton, url/favicon.ico
-    favicon_url = '{uri.scheme}://{uri.netloc}/favicon.ico'.format(\
-        uri=parsed_site_uri)
+    try:
+        # The favicon doesn't appear to be in the makrup
+        # Let's look at the common locaiton, url/favicon.ico
+        favicon_url = '{uri.scheme}://{uri.netloc}/favicon.ico'.format(\
+            uri=parsed_site_uri)
+        response = requests.get(favicon_url, headers=headers)
+        if response.status_code == requests.codes.ok:
+            return favicon_url
+    except Exception:
+        pass
 
-    response = requests.get(favicon_url, headers=headers)
-    if response.status_code == requests.codes.ok:
-        return favicon_url
 
     # No favicon in the markup or at url/favicon.ico
     return None
@@ -116,19 +119,20 @@ def get_url_domain(url, name_only=False):
     return '{uri.netloc}'.format(uri=parsed_uri).replace('www.', '').split('.')[0]
 
 
-def pars_url_metadata(url):
+def pars_url_metadata(url, html=None):
     """
     This function pars the HTML page and retrieves the URL metadata using MetadataParser API.
     """
-    page = ''
+    page = html
     origina_url = url
     try:
-        # Reading the HTML page and retrieving metadata
-        resp = urllib.request.urlopen(
-            urllib.request.Request(origina_url, headers=headers))
-        # Retrieve the original URL. The URL can be shortened by an URL shortner like bitly
-        origina_url = resp.url
-        page = resp.read()
+        if not html:
+            # Reading the HTML page and retrieving metadata
+            resp = urllib.request.urlopen(
+                urllib.request.Request(origina_url, headers=headers))
+            # Retrieve the original URL. The URL can be shortened by an URL shortner like bitly
+            origina_url = resp.url
+            page = resp.read()
         url_metadata = metadata_parser.MetadataParser(
             html=page.decode('utf-8'), requests_timeout=100)
     except Exception:
@@ -156,16 +160,16 @@ def pars_url_metadata(url):
     return result
 
 
-def get_url_metadata(url, picture_uploader=None):
+def get_url_metadata(url, html=None, picture_uploader=None, providers=oembed_providers):
     """
     Retrieving URL metadata by applying the MetadataParser API and the oembed API.
     picture_uploader is used to save the images in the database
     """
-    url_metadata = pars_url_metadata(url)
+    url_metadata = pars_url_metadata(url, html)
     try:
         # retrieve the original URL. The URL can be shortened by an URL shortner like bitly
         origina_url = url_metadata['url'] or url
-        provider_metadata = oembed_providers.request(origina_url)
+        provider_metadata = providers.request(origina_url)
         provider_metadata.update(url_metadata)
         url_metadata = provider_metadata
     except Exception:
@@ -176,9 +180,9 @@ def get_url_metadata(url, picture_uploader=None):
     author_url = url_metadata.get('author_url', None)
     author_avatar = url_metadata.get('author_avatar', None)
     if not author_avatar and author_name and author_url:
-        author_metadata = get_url_metadata(author_url)
+        author_metadata = get_url_metadata(author_url, providers=providers)
         url_metadata['author_avatar'] = author_metadata.get(
-            'thumbnail_url', None)
+            'thumbnail_url', None) if author_metadata else None
 
     # Save the pictures in the database (see picture_uploader)
     if picture_uploader:
