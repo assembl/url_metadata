@@ -8,7 +8,7 @@ import unittest
 from micawber import *
 from micawber.test_utils import test_pr
 
-from utils import get_favicon_url, get_url_domain, get_url_metadata, pars_url_metadata
+from utils import get_favicon_url, get_url_domain, get_url_metadata, parse_url_metadata
 
 
 empty_document = '<html><head></head><body></body></html>'
@@ -65,7 +65,7 @@ class TestURLMetadata(unittest.TestCase):
         domain = get_url_domain(url, True)
         self.assertEqual(domain, 'link-test1')
 
-    def test_pars_url_metadata(self):
+    def test_parse_url_metadata(self):
         url = 'http://link-test1'
         favicon = 'http://link-test1/favicon.ico'
         image = 'http://link-test1/foobar.png'
@@ -73,7 +73,7 @@ class TestURLMetadata(unittest.TestCase):
         site_name = 'FooBar'
         description = 'FooBar description'
         document = get_document(title, site_name, description, url, image, favicon)
-        metadata = pars_url_metadata(url, document.encode())
+        metadata = parse_url_metadata(url, document.encode())
         expected = {
             'favicon_url': favicon,
             'description': description,
@@ -84,9 +84,9 @@ class TestURLMetadata(unittest.TestCase):
         }
         self.assertEqual(metadata, expected)
 
-    def test_pars_url_metadata_empty_doc(self):
+    def test_parse_url_metadata_empty_doc(self):
         url = 'http://link-test1'
-        metadata = pars_url_metadata(url, empty_document.encode())
+        metadata = parse_url_metadata(url, empty_document.encode())
         expected = {
             'description': None,
             'thumbnail_url': None,

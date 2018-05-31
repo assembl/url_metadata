@@ -17,7 +17,7 @@ from .apis_endpoints import extract_metadata
 
 
 # all the pictures present in the URL metadata
-pictures = ['thumbnail_url', 'author_avatar', 'favicon_url']
+pictures = ['thumbnail', 'thumbnail_url', 'author_avatar', 'favicon_url']
 
 # Some hosts don't like the requests default UA. Use this one instead.
 headers = {
@@ -92,8 +92,8 @@ def get_favicon_url(markup, url):
         return favicon_url
 
     try:
-        # The favicon doesn't appear to be in the makrup
-        # Let's look at the common locaiton, url/favicon.ico
+        # The favicon doesn't appear to be in the markup
+        # Let's look at the common location, url/favicon.ico
         favicon_url = '{uri.scheme}://{uri.netloc}/favicon.ico'.format(\
             uri=parsed_site_uri)
         response = requests.get(favicon_url, headers=headers)
@@ -109,7 +109,7 @@ def get_favicon_url(markup, url):
 
 def get_url_domain(url, name_only=False):
     """
-    Return the domaine of an URL. If name_only is True,
+    Return the domain of an URL. If name_only is True,
     we return only the netloc of the URL
     """
     parsed_uri = urllib.parse.urlparse(url)
@@ -119,19 +119,19 @@ def get_url_domain(url, name_only=False):
     return '{uri.netloc}'.format(uri=parsed_uri).replace('www.', '').split('.')[0]
 
 
-def pars_url_metadata(url, html=None):
+def parse_url_metadata(url, html=None):
     """
-    This function pars the HTML page and retrieves the URL metadata using MetadataParser API.
+    This function parses the HTML page and retrieves the URL metadata using MetadataParser API.
     """
     page = html
-    origina_url = url
+    original_url = url
     try:
         if not html:
             # Reading the HTML page and retrieving metadata
             resp = urllib.request.urlopen(
-                urllib.request.Request(origina_url, headers=headers))
-            # Retrieve the original URL. The URL can be shortened by an URL shortner like bitly
-            origina_url = resp.url
+                urllib.request.Request(original_url, headers=headers))
+            # Retrieve the original URL. The URL can be shortened by an URL shortener like bitly
+            original_url = resp.url
             page = resp.read()
         url_metadata = metadata_parser.MetadataParser(
             html=page.decode('utf-8'), requests_timeout=100)
@@ -146,17 +146,17 @@ def pars_url_metadata(url, html=None):
     site_name = url_metadata.get_metadata('site_name', None)
     if not site_name:
         site_name = url_metadata.get_metadata('og:site_name', None)
-        site_name = site_name if site_name else get_url_domain(origina_url, True)
+        site_name = site_name if site_name else get_url_domain(original_url, True)
 
     result = {
-        'url': origina_url,
-        'favicon_url': get_favicon_url(page, origina_url),
+        'url': original_url,
+        'favicon_url': get_favicon_url(page, original_url),
         'title': url_metadata.get_metadata('title', None),
         'description': url_metadata.get_metadata('description', None),
         'provider_name': site_name,
         'thumbnail_url': thumbnail_url
     }
-    result.update(extract_metadata(origina_url, page=page))
+    result.update(extract_metadata(original_url, page=page))
     return result
 
 
@@ -165,11 +165,11 @@ def get_url_metadata(url, html=None, picture_uploader=None, providers=oembed_pro
     Retrieving URL metadata by applying the MetadataParser API and the oembed API.
     picture_uploader is used to save the images in the database
     """
-    url_metadata = pars_url_metadata(url, html)
+    url_metadata = parse_url_metadata(url, html)
     try:
-        # retrieve the original URL. The URL can be shortened by an URL shortner like bitly
-        origina_url = url_metadata['url'] or url
-        provider_metadata = providers.request(origina_url)
+        # retrieve the original URL. The URL can be shortened by an URL shortener like bitly
+        original_url = url_metadata['url'] or url
+        provider_metadata = providers.request(original_url)
         provider_metadata.update(url_metadata)
         url_metadata = provider_metadata
     except Exception:

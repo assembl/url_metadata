@@ -60,7 +60,7 @@ def get_picture_uploader(cursor):
             blob = urllib.request.urlopen(
                 urllib.request.Request(url, headers=headers)).read()
             # generate an id for this URL
-            img_id = hashlib.md5(url.encode('utf-8')).hexdigest()
+            img_id = hashlib.sha256(url.encode('utf-8')).hexdigest()
             exist_img_query = """
                 SELECT PICTURE FROM PICTURES
                     WHERE ID='{img_id}'
