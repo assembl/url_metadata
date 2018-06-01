@@ -192,8 +192,7 @@ def get_url_metadata(url, html=None, picture_uploader=None, providers=oembed_pro
                 picture_id = picture_uploader(picture_url)
                 url_metadata[picture] = url_for(
                     'picture',
-                    picture_id=picture_id,
-                    _external=True) if picture_id else None
+                    picture_id=picture_id) if picture_id else None
 
 
     return url_metadata
