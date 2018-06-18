@@ -4,12 +4,12 @@
 # licence: AGPL
 # author: Amen Souissi
 
-import imghdr
 import io
 import sqlite3
 import hashlib
 import urllib
 import json
+import magic
 from flask import (
     Flask, request, render_template,
     jsonify, send_file, abort)
@@ -150,7 +150,8 @@ def picture(picture_id):
             result_fetch = result_cursor.fetchone()
             if result_fetch:
                 fp = io.BytesIO(result_fetch[0])
-                mimetype = 'image/{type}'.format(type=imghdr.what(fp))
+                mimetype = magic.from_buffer(fp.read(), mime=True)
+                fp.seek(0)
                 return send_file(fp, mimetype=mimetype)
 
             return abort(404)
