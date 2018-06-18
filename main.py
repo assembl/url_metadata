@@ -4,6 +4,7 @@
 # licence: AGPL
 # author: Amen Souissi
 
+import imghdr
 import io
 import sqlite3
 import hashlib
@@ -148,7 +149,9 @@ def picture(picture_id):
             result_cursor = cursor.execute(exist_img_query)
             result_fetch = result_cursor.fetchone()
             if result_fetch:
-                return send_file(io.BytesIO(result_fetch[0]), mimetype='image')
+                fp = io.BytesIO(result_fetch[0])
+                mimetype = 'image/{type}'.format(type=imghdr.what(fp))
+                return send_file(fp, mimetype=mimetype)
 
             return abort(404)
         except Exception as error:
