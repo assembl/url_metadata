@@ -16,7 +16,7 @@ from flask import (
 from flask_cors import CORS, cross_origin
 from sqlite3 import OperationalError
 
-from utils import get_url_metadata, headers
+from .utils import get_url_metadata, headers
 
 
 #Assuming urls.db is in your app root folder
@@ -157,10 +157,3 @@ def picture(picture_id):
             return abort(404)
         except Exception as error:
             return abort(404)
-
-
-if __name__ == '__main__':
-    # This code checks whether database table is created or not
-    table_check()
-    # app.run(debug=True)
-    app.run(host='0.0.0.0')

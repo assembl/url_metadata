@@ -23,4 +23,4 @@ USER u1000
 EXPOSE 5000
 VOLUME /app/var
 
-CMD ["python", "main.py"]
+CMD ["python", "-m", "url_metadata"]

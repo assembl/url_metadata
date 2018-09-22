@@ -8,7 +8,7 @@ import unittest
 from micawber import *
 from micawber.test_utils import test_pr
 
-from utils import get_favicon_url, get_url_domain, get_url_metadata, parse_url_metadata
+from url_metadata.utils import get_favicon_url, get_url_domain, get_url_metadata, parse_url_metadata
 
 
 empty_document = '<html><head></head><body></body></html>'
