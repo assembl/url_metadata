@@ -4,6 +4,7 @@
 # licence: AGPL
 # author: Amen Souissi
 
+from os.path import dirname, join
 import json
 import micawber
 import metadata_parser
@@ -26,9 +27,9 @@ headers = {
 
 
 oembed_providers_reg = micawber.ProviderRegistry()
+providers_fname = join(dirname(__file__), 'providers.json')
 
-
-with open('./providers.json') as providers_file:
+with open(providers_fname) as providers_file:
     providers = json.load(providers_file)
     for provider in providers:
         for endpoint in provider['endpoints']:

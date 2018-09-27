@@ -13,7 +13,7 @@ With a virtual env:
     virtualenv -p python3 url_metadata_env
     source url_metadata_env/bin/activate
     pip install -r requirements.txt
-    python main.py
+    python -m url_metadata
 
 Run tests
     python -m unittest tests
