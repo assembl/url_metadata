@@ -161,7 +161,7 @@ def parse_url_metadata(url, html=None):
     return result
 
 
-def get_url_metadata(url, html=None, picture_uploader=None, providers=oembed_providers):
+def get_url_metadata(url, html=None, picture_uploader=None, providers=oembed_providers, find_author=True):
     """
     Retrieving URL metadata by applying the MetadataParser API and the oembed API.
     picture_uploader is used to save the images in the database
@@ -176,14 +176,15 @@ def get_url_metadata(url, html=None, picture_uploader=None, providers=oembed_pro
     except Exception:
         pass
 
-    # Recovery of the author's picture
-    author_name = url_metadata.get('author_name', None)
-    author_url = url_metadata.get('author_url', None)
-    author_avatar = url_metadata.get('author_avatar', None)
-    if not author_avatar and author_name and author_url:
-        author_metadata = get_url_metadata(author_url, providers=providers)
-        url_metadata['author_avatar'] = author_metadata.get(
-            'thumbnail_url', None) if author_metadata else None
+    if find_author:
+        # Recovery of the author's picture
+        author_name = url_metadata.get('author_name', None)
+        author_url = url_metadata.get('author_url', None)
+        author_avatar = url_metadata.get('author_avatar', None)
+        if not author_avatar and author_name and author_url:
+            author_metadata = get_url_metadata(author_url, providers=providers, find_author=False)
+            url_metadata['author_avatar'] = author_metadata.get(
+                'thumbnail_url', None) if author_metadata else None
 
     # Save the pictures in the database (see picture_uploader)
     if picture_uploader:
