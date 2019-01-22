@@ -1,4 +1,4 @@
-FROM python:3.4
+FROM python:3.6
 MAINTAINER Amen SOUISSI <amensouissi@ecreall.com>
 
 RUN mkdir -p /app/var
