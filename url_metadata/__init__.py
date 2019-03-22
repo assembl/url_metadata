@@ -64,9 +64,9 @@ def get_picture_uploader(cursor):
             img_id = hashlib.sha256(url.encode('utf-8')).hexdigest()
             exist_img_query = """
                 SELECT PICTURE FROM PICTURES
-                    WHERE ID='{img_id}'
-                """.format(img_id=img_id)
-            result_cursor = cursor.execute(exist_img_query)
+                    WHERE ID=?
+                """
+            result_cursor = cursor.execute(exist_img_query, [img_id])
             result_fetch = result_cursor.fetchone()
             # if the picture exist return the img_id else add it to the database
             if not result_fetch:
@@ -97,9 +97,9 @@ def home():
                 # else insert a new line in the database
                 exist_url_query = """
                     SELECT METADATA FROM URL_METADATA
-                        WHERE URL='{url}'
-                    """.format(url=url)
-                result_cursor = cursor.execute(exist_url_query)
+                        WHERE URL=?
+                    """
+                result_cursor = cursor.execute(exist_url_query, [url])
                 result_fetch = result_cursor.fetchone()
                 if result_fetch:
                     url_metadata = json.loads(result_fetch[0])
@@ -144,9 +144,9 @@ def picture(picture_id):
             cursor = conn.cursor()
             exist_img_query = """
                 SELECT PICTURE FROM PICTURES
-                    WHERE ID='{img_id}'
-                """.format(img_id=picture_id)
-            result_cursor = cursor.execute(exist_img_query)
+                    WHERE ID=?
+                """
+            result_cursor = cursor.execute(exist_img_query, [picture_id])
             result_fetch = result_cursor.fetchone()
             if result_fetch:
                 fp = io.BytesIO(result_fetch[0])
