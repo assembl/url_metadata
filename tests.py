@@ -15,26 +15,26 @@ empty_document = '<html><head></head><body></body></html>'
 
 
 def get_document(title, site_name, description, url, image, favicon):
-    return '<html><head>' + \
-        '<meta http-equiv="Content-Type" content="text/html; charset=utf-8">' + \
-        '<title>Site title Foo bar</title>' + \
-        '<meta property="og:site_name" content="'+site_name+'">' + \
-        '<meta property="og:type" content="website">' + \
-        '<meta property="og:locale" content="fr_FR">' + \
-        '<meta property="og:title" content="'+title+'">' + \
-        '<meta property="og:description" content="'+description+'">' + \
-        '<meta property="og:url" content="'+url+'">' + \
-        '<meta property="og:image:type" content="image/png">' + \
-        '<meta property="og:image:width" content="1880">' + \
-        '<meta property="og:image:height" content="984">' + \
-        '<meta property="og:image" content="'+image+'">' + \
-        '<meta name="twitter:card" content="summary">' + \
-        '<meta name="twitter:site" content="'+site_name+'">' + \
-        '<meta name="twitter:url" content="'+url+'">' + \
-        '<meta name="twitter:title" content="'+title+'">' + \
-        '<meta name="twitter:description" content="'+description+'">' + \
-        '<link rel="shortcut icon" href="'+favicon+'">'+ \
-        '</head><body></body></html>'
+    return """<html><head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <title>Site title Foo bar</title>
+        <meta property="og:site_name" content="{site_name}">
+        <meta property="og:type" content="website">
+        <meta property="og:locale" content="fr_FR">
+        <meta property="og:title" content="{title}">
+        <meta property="og:description" content="{description}">
+        <meta property="og:url" content="{url}">
+        <meta property="og:image:type" content="image/png">
+        <meta property="og:image:width" content="1880">
+        <meta property="og:image:height" content="984">
+        <meta property="og:image" content="{image}">
+        <meta name="twitter:card" content="summary">
+        <meta name="twitter:site" content="{site_name}">
+        <meta name="twitter:url" content="{url}">
+        <meta name="twitter:title" content="{title}">
+        <meta name="twitter:description" content="{description}">
+        <link rel="shortcut icon" href="{favicon}">
+        </head><body></body></html>""".format(title=title, site_name=site_name, description=description, url=url, image=image, favicon=favicon)
 
 
 class TestURLMetadata(unittest.TestCase):
