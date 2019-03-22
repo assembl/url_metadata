@@ -29,14 +29,14 @@ DB_FILENAME = 'var/urls.db'
 
 def table_check():
     create_table_query = """
-        CREATE TABLE URL_METADATA(
+        CREATE TABLE IF NOT EXISTS URL_METADATA(
         ID INTEGER PRIMARY KEY     AUTOINCREMENT,
         METADATA TEXT NOT NULL UNIQUE,
         URL  TEXT  NOT NULL UNIQUE
         );
         """
     create_pictures_table_query = """
-        CREATE TABLE PICTURES(
+        CREATE TABLE IF NOT EXISTS PICTURES(
         ID TEXT PRIMARY KEY,
         PICTURE BLOB
         );
