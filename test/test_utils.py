@@ -5,7 +5,6 @@
 # author: Amen Souissi
 
 import unittest
-from micawber import *
 from micawber.test_utils import test_pr
 
 from url_metadata.utils import get_favicon_url, get_url_domain, get_url_metadata, parse_url_metadata
@@ -37,7 +36,7 @@ def get_document(title, site_name, description, url, image, favicon):
         </head><body></body></html>""".format(title=title, site_name=site_name, description=description, url=url, image=image, favicon=favicon)
 
 
-class TestURLMetadata(unittest.TestCase):
+class TestUtils(unittest.TestCase):
 
     def test_get_favicon_url(self):
         url = 'http://link-test1'
