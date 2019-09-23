@@ -18,15 +18,6 @@ from sqlite3 import OperationalError
 
 from .utils import get_url_metadata, headers
 
-
-#Assuming urls.db is in your app root folder
-app = Flask(__name__)
-
-cors = CORS(app, resources={r"/": {"origins": "*"}})
-
-DB_FILENAME = 'var/urls.db'
-
-
 def table_check():
     create_table_query = """
         CREATE TABLE URL_METADATA(
@@ -80,6 +71,20 @@ def get_picture_uploader(cursor):
             return None
 
     return insert_picture
+
+class URLMetadata(Flask):
+    def __init__(self, *args, **kwargs):
+        table_check()
+        super(URLMetadata, self).__init__(*args, **kwargs)
+
+
+#Assuming urls.db is in your app root folder
+app = URLMetadata(__name__)
+
+cors = CORS(app, resources={r"/": {"origins": "*"}})
+
+DB_FILENAME = 'var/urls.db'
+
 
 
 @app.route('/', methods=['GET', 'POST'])
