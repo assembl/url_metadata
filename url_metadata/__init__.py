@@ -18,7 +18,11 @@ from sqlite3 import OperationalError
 
 from .utils import get_url_metadata, headers
 
+# constants
+DB_FILENAME = 'var/urls.db'
+
 def table_check():
+    """Create the database schema if it does not exist yet"""
     create_table_query = """
         CREATE TABLE URL_METADATA(
         ID INTEGER PRIMARY KEY     AUTOINCREMENT,
@@ -79,14 +83,13 @@ class URLMetadata(Flask):
 
 
 #Assuming urls.db is in your app root folder
+# initialize Flask
 app = URLMetadata(__name__)
 
 cors = CORS(app, resources={r"/": {"origins": "*"}})
 
-DB_FILENAME = 'var/urls.db'
 
-
-
+# define routes
 @app.route('/', methods=['GET', 'POST'])
 @cross_origin(origin='localhost',headers=['Content-Type','Authorization'])
 def home():
@@ -162,3 +165,8 @@ def picture(picture_id):
             return abort(404)
         except Exception as error:
             return abort(404)
+
+
+# define module exports 
+
+__all__ = ['app']
