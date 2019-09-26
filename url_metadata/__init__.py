@@ -18,16 +18,11 @@ from sqlite3 import OperationalError
 
 from .utils import get_url_metadata, headers
 
-
-#Assuming urls.db is in your app root folder
-app = Flask(__name__)
-
-cors = CORS(app, resources={r"/": {"origins": "*"}})
-
+# constants
 DB_FILENAME = 'var/urls.db'
 
-
 def table_check():
+    """Create the database schema if it does not exist yet"""
     create_table_query = """
         CREATE TABLE URL_METADATA(
         ID INTEGER PRIMARY KEY     AUTOINCREMENT,
@@ -81,7 +76,20 @@ def get_picture_uploader(cursor):
 
     return insert_picture
 
+class URLMetadata(Flask):
+    def __init__(self, *args, **kwargs):
+        table_check()
+        super(URLMetadata, self).__init__(*args, **kwargs)
 
+
+#Assuming urls.db is in your app root folder
+# initialize Flask
+app = URLMetadata(__name__)
+
+cors = CORS(app, resources={r"/": {"origins": "*"}})
+
+
+# define routes
 @app.route('/', methods=['GET', 'POST'])
 @cross_origin(origin='localhost',headers=['Content-Type','Authorization'])
 def home():
@@ -157,3 +165,8 @@ def picture(picture_id):
             return abort(404)
         except Exception as error:
             return abort(404)
+
+
+# define module exports 
+
+__all__ = ['app']
