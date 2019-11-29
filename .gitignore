@@ -6,3 +6,4 @@ __pycache__
 tmp/
 var/
 url_metadata_env/
+url_metadata.egg-info/
