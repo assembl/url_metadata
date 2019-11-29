@@ -1,1 +1,1 @@
-This repo has been deprecated and all future development will take place on [https://gitlab.com/assembl/url_metadata](the assembl project on GitLab).
+This repo has been deprecated and all future development will take place on [the assembl project on GitLab](https://gitlab.com/assembl/url_metadata).
